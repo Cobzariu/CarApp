@@ -1,0 +1,7 @@
+{
+  "name": "CarApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "react"
+}
