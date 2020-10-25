@@ -95,7 +95,7 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
             onIonChange={(e) => setAutomatic(e.detail.checked)}
           />
         </IonItem>
-        <IonDatetime value={releaseDate} onIonChange={e => setReleaseDate(e.detail.value!)}></IonDatetime>
+        <IonDatetime value={releaseDate} onIonChange={e => setReleaseDate(e.detail.value?.split("T")[0]!)}></IonDatetime>
         <IonLoading isOpen={saving} />
         {savingError && (
           <div>{savingError.message || "Failed to save item"}</div>
