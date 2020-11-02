@@ -13,14 +13,14 @@ import {
   IonToolbar,
 } from "@ionic/react";
 import { add } from "ionicons/icons";
-import Item from "./Item";
+import Item from "./Car";
 import { getLogger } from "../core";
-import { ItemContext } from "./ItemProvider";
+import { CarContext } from "./CarProvider";
 
 const log = getLogger("ItemList");
 
-const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
-  const { items, fetching, fetchingError } = useContext(ItemContext);
+const CarList: React.FC<RouteComponentProps> = ({ history }) => {
+  const { items, fetching, fetchingError } = useContext(CarContext);
   log("render");
   return (
     <IonPage>
@@ -59,4 +59,4 @@ const ItemList: React.FC<RouteComponentProps> = ({ history }) => {
   );
 };
 
-export default ItemList;
+export default CarList;

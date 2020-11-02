@@ -15,26 +15,26 @@ import {
   IonDatetime
 } from "@ionic/react";
 import { getLogger } from "../core";
-import { ItemContext } from "./ItemProvider";
+import { CarContext } from "./CarProvider";
 import { RouteComponentProps } from "react-router";
-import { ItemProps } from "./ItemProps";
+import { CarProps } from "./CarProps";
 
 const log = getLogger("ItemEdit");
 
-interface ItemEditProps
+interface CarEditProps
   extends RouteComponentProps<{
     id?: string;
   }> {}
 
-const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
+const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   const { items, saving, savingError, saveItem, deleteItem } = useContext(
-    ItemContext
+    CarContext
   );
   const [name, setName] = useState("");
   const [horsepower, setHorsepower] = useState(0);
   const [automatic, setAutomatic] = useState(false);
   const [releaseDate, setReleaseDate] = useState('');
-  const [item, setItem] = useState<ItemProps>();
+  const [item, setItem] = useState<CarProps>();
   useEffect(() => {
     log("useEffect");
     const routeId = match.params.id || "";
@@ -105,4 +105,4 @@ const ItemEdit: React.FC<ItemEditProps> = ({ history, match }) => {
   );
 };
 
-export default ItemEdit;
+export default CarEdit;

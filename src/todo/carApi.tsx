@@ -1,27 +1,27 @@
 import axios from 'axios';
 import { authConfig, baseUrl, getLogger, withLogs } from '../core';
-import { ItemProps } from './ItemProps';
+import { CarProps } from './CarProps';
 
 const itemUrl = `http://${baseUrl}/api/car`;
 
-export const getItems: (token: string) => Promise<ItemProps[]> = token => {
+export const getItems: (token: string) => Promise<CarProps[]> = token => {
   return withLogs(axios.get(itemUrl, authConfig(token)), 'getItems');
 }
 
-export const createItem: (token: string, item: ItemProps) => Promise<ItemProps[]> = (token, item) => {
+export const createItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
   return withLogs(axios.post(itemUrl, item, authConfig(token)), 'createItem');
 }
 
-export const updateItem: (token: string, item: ItemProps) => Promise<ItemProps[]> = (token, item) => {
+export const updateItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
   return withLogs(axios.put(`${itemUrl}/${item._id}`, item, authConfig(token)), 'updateItem');
 }
-export const eraseItem: (token: string, item: ItemProps) => Promise<ItemProps[]> = (token, item) => {
+export const eraseItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
   return withLogs(axios.delete(`${itemUrl}/${item._id}`,authConfig(token)), 'deleteItem');
 }
 
 interface MessageData {
   type: string;
-  payload: ItemProps;
+  payload: CarProps;
 }
 
 const log = getLogger('ws');

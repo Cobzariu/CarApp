@@ -1,4 +1,4 @@
-export interface ItemProps {
+export interface CarProps {
   _id?: string;
   name: string;
   horsepower: number;

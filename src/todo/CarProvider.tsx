@@ -1,23 +1,23 @@
 import React, { useCallback, useContext, useEffect, useReducer } from "react";
 import PropTypes from "prop-types";
 import { getLogger } from "../core";
-import { ItemProps } from "./ItemProps";
+import { CarProps } from "./CarProps";
 import {
   createItem,
   getItems,
   newWebSocket,
   updateItem,
   eraseItem,
-} from "./itemApi";
+} from "./carApi";
 import { AuthContext } from "../auth";
 
 const log = getLogger("ItemProvider");
 
-type SaveItemFn = (item: ItemProps) => Promise<any>;
-type DeleteItemFn = (item: ItemProps) => Promise<any>;
+type SaveItemFn = (item: CarProps) => Promise<any>;
+type DeleteItemFn = (item: CarProps) => Promise<any>;
 
-export interface ItemsState {
-  items?: ItemProps[];
+export interface CarsState {
+  items?: CarProps[];
   fetching: boolean;
   fetchingError?: Error | null;
   saving: boolean;
@@ -33,7 +33,7 @@ interface ActionProps {
   payload?: any;
 }
 
-const initialState: ItemsState = {
+const initialState: CarsState = {
   fetching: false,
   saving: false,
   deleting: false,
@@ -49,7 +49,7 @@ const DELETE_ITEM_STARTED = "DELETE_ITEM_STARTED";
 const DELETE_ITEM_SUCCEEDED = "DELETE_ITEM_SUCCEEDED";
 const DELETE_ITEM_FAILED = "DELETE_ITEM_FAILED";
 
-const reducer: (state: ItemsState, action: ActionProps) => ItemsState = (
+const reducer: (state: CarsState, action: ActionProps) => CarsState = (
   state,
   { type, payload }
 ) => {
@@ -67,7 +67,6 @@ const reducer: (state: ItemsState, action: ActionProps) => ItemsState = (
       const items = [...(state.items || [])];
       const item = payload.item;
       const index = items.findIndex((it) => it._id === item._id);
-      console.log(items);
       if (index === -1) {
         items.splice(0, 0, item);
       } else {
@@ -95,13 +94,13 @@ const reducer: (state: ItemsState, action: ActionProps) => ItemsState = (
   }
 };
 
-export const ItemContext = React.createContext<ItemsState>(initialState);
+export const CarContext = React.createContext<CarsState>(initialState);
 
-interface ItemProviderProps {
+interface CarProviderProps {
   children: PropTypes.ReactNodeLike;
 }
 
-export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
+export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
   const { token } = useContext(AuthContext);
   const [state, dispatch] = useReducer(reducer, initialState);
   const {
@@ -127,7 +126,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     deleteItem,
   };
   log("returns");
-  return <ItemContext.Provider value={value}>{children}</ItemContext.Provider>;
+  return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
 
   function getItemsEffect() {
     let canceled = false;
@@ -155,7 +154,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     }
   }
 
-  async function saveItemCallback(item: ItemProps) {
+  async function saveItemCallback(item: CarProps) {
     try {
       log("saveItem started");
 
@@ -171,7 +170,7 @@ export const ItemProvider: React.FC<ItemProviderProps> = ({ children }) => {
     }
   }
 
-  async function deleteItemCallback(item: ItemProps) {
+  async function deleteItemCallback(item: CarProps) {
     try {
       log("delete started");
       dispatch({ type: DELETE_ITEM_STARTED });
