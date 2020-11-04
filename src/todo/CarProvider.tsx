@@ -66,13 +66,17 @@ const reducer: (state: CarsState, action: ActionProps) => CarsState = (
     case SAVE_ITEM_SUCCEEDED:
       const items = [...(state.items || [])];
       const item = payload.item;
-      const index = items.findIndex((it) => it._id === item._id);
-      if (index === -1) {
-        items.splice(0, 0, item);
-      } else {
-        items[index] = item;
+      if (item._id !== undefined)
+      {
+        const index = items.findIndex((it) => it._id === item._id);
+        if (index === -1) {
+          items.splice(0, 0, item);
+        } else {
+          items[index] = item;
+        }
+        return { ...state, items, saving: false };
       }
-      return { ...state, items, saving: false };
+      
 
     case SAVE_ITEM_FAILED:
       return { ...state, savingError: payload.error, saving: false };
@@ -195,9 +199,9 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
         }
         const { type, payload: item } = message;
         log(`ws message, item ${type}`);
-        // if (type === "created" || type === "updated") {
-        //   dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item } });
-        // }
+        if (type === "created" || type === "updated") {
+          dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item } });
+        }
       });
     }
     return () => {
