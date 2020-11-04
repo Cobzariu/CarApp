@@ -1,48 +1,114 @@
-import axios from 'axios';
-import { authConfig, baseUrl, getLogger, withLogs } from '../core';
-import { CarProps } from './CarProps';
+import axios from "axios";
+import { authConfig, baseUrl, getLogger, withLogs } from "../core";
+import { CarProps } from "./CarProps";
+import { Plugins } from "@capacitor/core";
+import { key } from "ionicons/icons";
 
+const { Storage } = Plugins;
 const itemUrl = `http://${baseUrl}/api/car`;
 
-export const getItems: (token: string) => Promise<CarProps[]> = token => {
-  return withLogs(axios.get(itemUrl, authConfig(token)), 'getItems');
-}
+export const getItems: (token: string) => Promise<CarProps[]> = (token) => {
+  var result = axios.get(itemUrl, authConfig(token));
+  (async () => {
+    await Storage.clear();
+  })();
+  result.then(function (result) {
+    result.data.forEach(async (item: CarProps) => {
+      await Storage.set({
+        key: item._id!,
+        value: JSON.stringify({
+          id: item._id,
+          name: item.name,
+          automatic: item.automatic,
+          releaseDate: item.releaseDate,
+          horsepower: item.horsepower,
+        }),
+      });
+    });
+  });
 
-export const createItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
-  return withLogs(axios.post(itemUrl, item, authConfig(token)), 'createItem');
-}
+  return withLogs(result, "getItems");
+};
 
-export const updateItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
-  return withLogs(axios.put(`${itemUrl}/${item._id}`, item, authConfig(token)), 'updateItem');
-}
-export const eraseItem: (token: string, item: CarProps) => Promise<CarProps[]> = (token, item) => {
-  return withLogs(axios.delete(`${itemUrl}/${item._id}`,authConfig(token)), 'deleteItem');
-}
+export const createItem: (
+  token: string,
+  item: CarProps
+) => Promise<CarProps[]> = (token, item) => {
+  var result = axios.post(itemUrl, item, authConfig(token));
+  result.then(async function (r) {
+    var item = r.data;
+    await Storage.set({
+      key: item._id!,
+      value: JSON.stringify({
+        id: item._id,
+        name: item.name,
+        automatic: item.automatic,
+        releaseDate: item.releaseDate,
+        horsepower: item.horsepower,
+      }),
+    });
+  });
+  return withLogs(result, "createItem");
+};
+
+export const updateItem: (
+  token: string,
+  item: CarProps
+) => Promise<CarProps[]> = (token, item) => {
+  var result = axios.put(`${itemUrl}/${item._id}`, item, authConfig(token));
+  result.then(async function (r) {
+    var item = r.data;
+    await Storage.set({
+      key: item._id!,
+      value: JSON.stringify({
+        id: item._id,
+        name: item.name,
+        automatic: item.automatic,
+        releaseDate: item.releaseDate,
+        horsepower: item.horsepower,
+      }),
+    });
+  });
+  return withLogs(result, "updateItem");
+};
+export const eraseItem: (
+  token: string,
+  item: CarProps
+) => Promise<CarProps[]> = (token, item) => {
+  var result = axios.delete(`${itemUrl}/${item._id}`, authConfig(token));
+  result.then(async function (r) {
+    await Storage.remove({ key: item._id! });
+  });
+  return withLogs(result, "deleteItem");
+};
 
 interface MessageData {
   type: string;
   payload: CarProps;
 }
 
-const log = getLogger('ws');
+const log = getLogger("ws");
 
-export const newWebSocket = (token: string, onMessage: (data: MessageData) => void) => {
+export const newWebSocket = (
+  token: string,
+  onMessage: (data: MessageData) => void
+) => {
   const ws = new WebSocket(`ws://${baseUrl}`);
   ws.onopen = () => {
-    log('web socket onopen');
-    ws.send(JSON.stringify({ type: 'authorization', payload: { token } }));
+    log("web socket onopen");
+    ws.send(JSON.stringify({ type: "authorization", payload: { token } }));
   };
   ws.onclose = () => {
-    log('web socket onclose');
+    log("web socket onclose");
   };
-  ws.onerror = error => {
-    log('web socket onerror', error);
+  ws.onerror = (error) => {
+    log("web socket onerror", error);
   };
-  ws.onmessage = messageEvent => {
-    log('web socket onmessage');
+  ws.onmessage = (messageEvent) => {
+    log("web socket onmessage");
     onMessage(JSON.parse(messageEvent.data));
   };
   return () => {
     ws.close();
-  }
-}
+  };
+};
