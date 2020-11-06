@@ -8,9 +8,6 @@ const itemUrl = `http://${baseUrl}/api/car`;
 
 export const getItems: (token: string) => Promise<CarProps[]> = (token) => {
   var result = axios.get(itemUrl, authConfig(token));
-  (async () => {
-    await Storage.clear();
-  })();
   result.then(function (result) {
     result.data.forEach(async (item: CarProps) => {
       await Storage.set({
