@@ -2,7 +2,6 @@ import axios from "axios";
 import { authConfig, baseUrl, getLogger, withLogs } from "../core";
 import { CarProps } from "./CarProps";
 import { Plugins } from "@capacitor/core";
-import { key } from "ionicons/icons";
 
 const { Storage } = Plugins;
 const itemUrl = `http://${baseUrl}/api/car`;

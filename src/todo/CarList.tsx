@@ -1,5 +1,6 @@
 import React, { useContext } from "react";
 import { RouteComponentProps } from "react-router";
+import { Redirect } from 'react-router-dom';
 import {
   IonContent,
   IonFab,
@@ -11,16 +12,23 @@ import {
   IonPage,
   IonTitle,
   IonToolbar,
+  IonButton
 } from "@ionic/react";
 import { add } from "ionicons/icons";
 import Item from "./Car";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
+import { AuthContext } from '../auth';
 
 const log = getLogger("ItemList");
 
 const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const { items, fetching, fetchingError } = useContext(CarContext);
+  const { logout } = useContext(AuthContext);
+  const handleLogout = () => {
+    logout?.();
+    return <Redirect to={{ pathname: '/login' }} />
+  };
   log("render");
   return (
     <IonPage>
@@ -28,6 +36,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
         <IonToolbar>
           <IonTitle>Car List</IonTitle>
         </IonToolbar>
+        <IonButton onClick={handleLogout}>Logout</IonButton>
       </IonHeader>
       <IonContent>
         <IonLoading isOpen={fetching} message="Fetching items" />
