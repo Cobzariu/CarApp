@@ -14,6 +14,8 @@ import {
   IonButton,
   IonInfiniteScroll,
   IonInfiniteScrollContent,
+  IonSelect,
+  IonSelectOption,
 } from "@ionic/react";
 import { add } from "ionicons/icons";
 import Item from "./Car";
@@ -29,7 +31,9 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const [disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(
     false
   );
+  const [filter, setFilter] = useState<string | undefined>(undefined);
   const [pos, setPos] = useState(16);
+  const selectOptions = ["automatic", "manual"];
   const [itemsShow, setItemsShow] = useState<CarProps[]>([]);
   const { logout } = useContext(AuthContext);
   const handleLogout = () => {
@@ -43,16 +47,23 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   }, [items]);
   log("render");
   async function searchNext($event: CustomEvent<void>) {
-    if (items && pos<items.length) {
+    if (items && pos < items.length) {
       setItemsShow([...itemsShow, ...items.slice(pos, 17 + pos)]);
       setPos(pos + 17);
-    }
-    else{
+    } else {
       setDisableInfiniteScroll(true);
     }
     ($event.target as HTMLIonInfiniteScrollElement).complete();
-
   }
+
+  useEffect(() => {
+    if (filter && items)
+    {
+      const boolType = filter === "automatic";
+      setItemsShow(items.filter(car=>car.automatic==boolType))
+      console.log("filter is "+filter);
+    }
+  }, [filter]);
   return (
     <IonPage>
       <IonHeader>
@@ -63,6 +74,17 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       </IonHeader>
       <IonContent fullscreen>
         <IonLoading isOpen={fetching} message="Fetching items" />
+        <IonSelect
+          value={filter}
+          placeholder="Select transmission type"
+          onIonChange={(e) => setFilter(e.detail.value)}
+        >
+          {selectOptions.map((option) => (
+            <IonSelectOption key={option} value={option}>
+              {option}
+            </IonSelectOption>
+          ))}
+        </IonSelect>
         {itemsShow &&
           itemsShow.map((car: CarProps) => {
             return (
