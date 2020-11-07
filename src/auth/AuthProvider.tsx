@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { getLogger } from "../core";
 import { login as loginApi } from "./authApi";
 import { Plugins } from "@capacitor/core";
-import { key } from "ionicons/icons";
 
 const { Storage } = Plugins;
 
@@ -118,8 +117,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         log("authenticate succeeded");
         await Storage.set({ key: "user", value: token });
-        var tokenStorage = await Storage.get({ key: "user" });
-        console.log("after Login "+tokenStorage.value);
         setState({
           ...state,
           token,
