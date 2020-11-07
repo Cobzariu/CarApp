@@ -16,6 +16,7 @@ import {
   IonInfiniteScrollContent,
   IonSelect,
   IonSelectOption,
+  IonSearchbar,
 } from "@ionic/react";
 import { add } from "ionicons/icons";
 import Item from "./Car";
@@ -32,6 +33,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
     false
   );
   const [filter, setFilter] = useState<string | undefined>(undefined);
+  const [search, setSearch] = useState<string>("");
   const [pos, setPos] = useState(16);
   const selectOptions = ["automatic", "manual"];
   const [itemsShow, setItemsShow] = useState<CarProps[]>([]);
@@ -57,13 +59,17 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   }
 
   useEffect(() => {
-    if (filter && items)
-    {
+    if (filter && items) {
       const boolType = filter === "automatic";
-      setItemsShow(items.filter(car=>car.automatic==boolType))
-      console.log("filter is "+filter);
+      setItemsShow(items.filter((car) => car.automatic == boolType));
     }
   }, [filter]);
+
+  useEffect(() => {
+    if (search && items) {
+      setItemsShow(items.filter((car) => car.name.startsWith(search)));
+    }
+  }, [search]);
   return (
     <IonPage>
       <IonHeader>
@@ -74,6 +80,11 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       </IonHeader>
       <IonContent fullscreen>
         <IonLoading isOpen={fetching} message="Fetching items" />
+        <IonSearchbar
+          value={search}
+          debounce={1000}
+          onIonChange={(e) => setSearch(e.detail.value!)}
+        ></IonSearchbar>
         <IonSelect
           value={filter}
           placeholder="Select transmission type"
