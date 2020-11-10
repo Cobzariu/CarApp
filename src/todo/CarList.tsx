@@ -61,7 +61,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   useEffect(() => {
     if (filter && items) {
       const boolType = filter === "automatic";
-      setItemsShow(items.filter((car) => car.automatic == boolType));
+      setItemsShow(items.filter((car) => car.automatic === boolType));
     }
   }, [filter]);
 
