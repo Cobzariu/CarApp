@@ -24,6 +24,7 @@ import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
+import { useNetwork } from "../utils/useNetwork";
 
 const log = getLogger("ItemList");
 
@@ -32,6 +33,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const [disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(
     false
   );
+  const { networkStatus } = useNetwork();
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState<string>("");
   const [pos, setPos] = useState(16);
@@ -76,6 +78,9 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
         <IonToolbar>
           <IonTitle>Car List</IonTitle>
           <IonButton onClick={handleLogout}>Logout</IonButton>
+          <div>
+            Network is {networkStatus.connected ? "online" : "offline"}
+          </div>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
