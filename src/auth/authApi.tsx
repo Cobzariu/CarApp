@@ -1,8 +1,7 @@
 import axios from 'axios';
-import { baseUrl, config, withLogs } from '../core';
+import { baseUrl, config, getLogger, withLogs } from '../core';
 
 const authUrl = `http://${baseUrl}/api/auth/login`;
-
 export interface AuthProps {
   token: string;
 }

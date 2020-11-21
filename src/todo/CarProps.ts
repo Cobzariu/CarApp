@@ -4,4 +4,5 @@ export interface CarProps {
   horsepower: number;
   automatic: boolean;
   releaseDate: string;
+  status: number;
 }

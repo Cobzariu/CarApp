@@ -12,13 +12,13 @@ import {
   IonCheckbox,
   IonLabel,
   IonItem,
-  IonDatetime
+  IonDatetime,
 } from "@ionic/react";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { RouteComponentProps } from "react-router";
 import { CarProps } from "./CarProps";
-
+import { useNetwork } from "../utils/useNetwork";
 const log = getLogger("ItemEdit");
 
 interface CarEditProps
@@ -33,8 +33,9 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   const [name, setName] = useState("");
   const [horsepower, setHorsepower] = useState(0);
   const [automatic, setAutomatic] = useState(false);
-  const [releaseDate, setReleaseDate] = useState('');
+  const [releaseDate, setReleaseDate] = useState("");
   const [item, setItem] = useState<CarProps>();
+  const { networkStatus } = useNetwork();
   useEffect(() => {
     log("useEffect");
     const routeId = match.params.id || "";
@@ -50,15 +51,15 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   }, [match.params.id, items]);
   const handleSave = () => {
     const editedItem = item
-      ? { ...item, name, horsepower, automatic, releaseDate }
-      : { name, horsepower, automatic, releaseDate };
-    saveItem && saveItem(editedItem).then(() => history.goBack());
+      ? { ...item, name, horsepower, automatic, releaseDate, status: 0 }
+      : { name, horsepower, automatic, releaseDate, status: 0 };
+    saveItem && saveItem(editedItem,networkStatus.connected).then(() => history.goBack());
   };
   const handleDelete = () => {
     const editedItem = item
-      ? { ...item, name, horsepower, automatic, releaseDate }
-      : { name, horsepower, automatic, releaseDate };
-    deleteItem && deleteItem(editedItem).then(() => history.goBack());
+    ? { ...item, name, horsepower, automatic, releaseDate, status: 0 }
+    : { name, horsepower, automatic, releaseDate, status: 0 };
+    deleteItem && deleteItem(editedItem,networkStatus.connected).then(() => history.goBack());
   };
   log("render");
   return (
@@ -95,7 +96,10 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
             onIonChange={(e) => setAutomatic(e.detail.checked)}
           />
         </IonItem>
-        <IonDatetime value={releaseDate} onIonChange={e => setReleaseDate(e.detail.value?.split("T")[0]!)}></IonDatetime>
+        <IonDatetime
+          value={releaseDate}
+          onIonChange={(e) => setReleaseDate(e.detail.value?.split("T")[0]!)}
+        ></IonDatetime>
         <IonLoading isOpen={saving} />
         {savingError && (
           <div>{savingError.message || "Failed to save item"}</div>

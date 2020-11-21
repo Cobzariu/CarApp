@@ -2,7 +2,6 @@ import axios from "axios";
 import { authConfig, baseUrl, getLogger, withLogs } from "../core";
 import { CarProps } from "./CarProps";
 import { Plugins } from "@capacitor/core";
-
 const { Storage } = Plugins;
 const itemUrl = `http://${baseUrl}/api/car`;
 
@@ -12,17 +11,10 @@ export const getItems: (token: string) => Promise<CarProps[]> = (token) => {
     result.data.forEach(async (item: CarProps) => {
       await Storage.set({
         key: item._id!,
-        value: JSON.stringify({
-          id: item._id,
-          name: item.name,
-          automatic: item.automatic,
-          releaseDate: item.releaseDate,
-          horsepower: item.horsepower,
-        }),
+        value: JSON.stringify(item),
       });
     });
   });
-
   return withLogs(result, "getItems");
 };
 
@@ -35,36 +27,28 @@ export const createItem: (
     var item = r.data;
     await Storage.set({
       key: item._id!,
-      value: JSON.stringify({
-        id: item._id,
-        name: item.name,
-        automatic: item.automatic,
-        releaseDate: item.releaseDate,
-        horsepower: item.horsepower,
-      }),
+      value: JSON.stringify(item),
     });
   });
   return withLogs(result, "createItem");
 };
-
 export const updateItem: (
   token: string,
   item: CarProps
 ) => Promise<CarProps[]> = (token, item) => {
+  console.log("TOKEN: "+token);
   var result = axios.put(`${itemUrl}/${item._id}`, item, authConfig(token));
-  result.then(async function (r) {
-    var item = r.data;
-    await Storage.set({
-      key: item._id!,
-      value: JSON.stringify({
-        id: item._id,
-        name: item.name,
-        automatic: item.automatic,
-        releaseDate: item.releaseDate,
-        horsepower: item.horsepower,
-      }),
+  result
+    .then(async function (r) {
+      var item = r.data;
+      await Storage.set({
+        key: item._id!,
+        value: JSON.stringify(item),
+      });
+    })
+    .catch((error) => {
+      console.log(error);
     });
-  });
   return withLogs(result, "updateItem");
 };
 export const eraseItem: (
