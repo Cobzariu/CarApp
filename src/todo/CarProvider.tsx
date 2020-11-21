@@ -10,6 +10,7 @@ import {
   newWebSocket,
   updateItem,
   eraseItem,
+  getItem,
 } from "./carApi";
 import { AuthContext } from "../auth";
 import { useNetwork } from "../utils/useNetwork";
@@ -148,12 +149,10 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     deleteItem,
     updateServer,
   };
-  log("returns");
   return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
 
   async function updateServerCallback() {
     const allKeys = Storage.keys();
-    log("IN updateServer token is:", token);
     let promisedItems;
     var i;
 
@@ -180,7 +179,6 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
       });
       if (plant !== null) {
         if (plant.status === 1) {
-          log("add plant:", JSON.stringify(plant));
           saveItem(plant, true);
         } else if (plant.status === 2) {
           deleteItem(plant, true);
@@ -262,6 +260,11 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     try {
       if (!connected) {
         throw new Error();
+      }
+      if ("_id" in item)
+      {
+        const oldItem=await getItem(token,item._id!);
+        log("oldItem: "+JSON.stringify(oldItem));
       }
       log("saveItem started");
       dispatch({ type: SAVE_ITEM_STARTED });

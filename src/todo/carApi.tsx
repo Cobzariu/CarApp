@@ -18,6 +18,11 @@ export const getItems: (token: string) => Promise<CarProps[]> = (token) => {
   return withLogs(result, "getItems");
 };
 
+export const getItem: (token: string, id:string) => Promise<CarProps> = (token,id) =>{
+  var result= axios.get(`${itemUrl}/${id}`,authConfig(token))
+  return withLogs(result, "getItem");
+} 
+
 export const createItem: (
   token: string,
   item: CarProps
