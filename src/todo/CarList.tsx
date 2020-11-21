@@ -72,7 +72,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
 
     function handleNetworkStatusChange(status: NetworkStatus) {
       log("useNetwork:", status.connected.valueOf());
-      if (!canceled && status.connected===true) {
+      if (!canceled && status.connected === true) {
         updateServer && updateServer();
       }
     }
@@ -143,6 +143,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
                 automatic={car.automatic}
                 releaseDate={car.releaseDate}
                 status={car.status}
+                version={car.version}
                 onEdit={(id) => history.push(`/item/${id}`)}
               />
             );

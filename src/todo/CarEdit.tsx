@@ -27,17 +27,22 @@ interface CarEditProps
   }> {}
 
 const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
-  const { items, saving, savingError, saveItem, deleteItem } = useContext(
-    CarContext
-  );
+  const {
+    items,
+    saving,
+    savingError,
+    saveItem,
+    deleteItem,
+    oldItem,
+  } = useContext(CarContext);
   const [name, setName] = useState("");
   const [horsepower, setHorsepower] = useState(0);
   const [automatic, setAutomatic] = useState(false);
   const [releaseDate, setReleaseDate] = useState("");
   const [item, setItem] = useState<CarProps>();
+  const [itemV2, setItemV2] = useState<CarProps>();
   const { networkStatus } = useNetwork();
   useEffect(() => {
-    log("useEffect");
     const routeId = match.params.id || "";
     const item = items?.find((it) => it._id === routeId);
     setItem(item);
@@ -49,19 +54,101 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       setReleaseDate(item.releaseDate);
     }
   }, [match.params.id, items]);
+  useEffect(() => {
+    setItemV2(oldItem);
+    log("SET OLD ITEM: " + JSON.stringify(oldItem));
+  }, [oldItem]);
+  useEffect(() => {}, []);
   const handleSave = () => {
     const editedItem = item
-      ? { ...item, name, horsepower, automatic, releaseDate, status: 0 }
-      : { name, horsepower, automatic, releaseDate, status: 0 };
-    saveItem && saveItem(editedItem,networkStatus.connected).then(() => history.goBack());
+      ? {
+          ...item,
+          name,
+          horsepower,
+          automatic,
+          releaseDate,
+          status: 0,
+          version: item.version ? item.version + 1 : 1,
+        }
+      : { name, horsepower, automatic, releaseDate, status: 0, version: 1 };
+    saveItem &&
+      saveItem(editedItem, networkStatus.connected).then(() => {
+        log(JSON.stringify(itemV2));
+        if (itemV2===undefined) history.goBack();
+      });
+  };
+  const handleConflict1 = () => {
+    const editedItem = {
+      ...item,
+      name,
+      horsepower,
+      automatic,
+      releaseDate,
+      status: 0,
+      version: oldItem ? oldItem.version + 1 : 0,
+    };
+    saveItem &&
+      saveItem(editedItem, networkStatus.connected).then(() => {
+        log(JSON.stringify(itemV2));
+        history.goBack();
+      });
+  };
+  const handleConflict2 = () => {
+    if (oldItem) {
+      const editedItem = {
+        ...item,
+        name: oldItem?.name,
+        horsepower: oldItem?.horsepower,
+        automatic: oldItem?.automatic,
+        releaseDate: oldItem?.releaseDate,
+        status: oldItem?.status,
+        version: oldItem?.version + 1,
+      };
+      saveItem &&
+        editedItem &&
+        saveItem(editedItem, networkStatus.connected).then(() => {
+          log(JSON.stringify(itemV2));
+          history.goBack();
+        });
+    }
   };
   const handleDelete = () => {
     const editedItem = item
-    ? { ...item, name, horsepower, automatic, releaseDate, status: 0 }
-    : { name, horsepower, automatic, releaseDate, status: 0 };
-    deleteItem && deleteItem(editedItem,networkStatus.connected).then(() => history.goBack());
+      ? {
+          ...item,
+          name,
+          horsepower,
+          automatic,
+          releaseDate,
+          status: 0,
+          version: 0,
+        }
+      : { name, horsepower, automatic, releaseDate, status: 0, version: 0 };
+    deleteItem &&
+      deleteItem(editedItem, networkStatus.connected).then(() =>
+        history.goBack()
+      );
   };
-  log("render");
+  const showDuplicate = () => {
+    return itemV2 ? (
+      <>
+        <IonItem>
+          <IonLabel>Name: {itemV2.name}</IonLabel>
+        </IonItem>
+        <IonItem>
+          <IonLabel>Horsepower: {itemV2.horsepower}</IonLabel>
+        </IonItem>
+
+        <IonItem>
+          <IonLabel>Automatic: </IonLabel>
+          <IonCheckbox checked={itemV2.automatic} disabled />
+        </IonItem>
+        <IonDatetime value={itemV2.releaseDate} disabled></IonDatetime>
+        <IonButton onClick={handleConflict1}>First Version</IonButton>
+        <IonButton onClick={handleConflict2}>Second Version</IonButton>
+      </>
+    ) : null;
+  };
   return (
     <IonPage>
       <IonHeader>
@@ -100,6 +187,24 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           value={releaseDate}
           onIonChange={(e) => setReleaseDate(e.detail.value?.split("T")[0]!)}
         ></IonDatetime>
+        {itemV2 && (
+          <>
+            <IonItem>
+              <IonLabel>Name: {itemV2.name}</IonLabel>
+            </IonItem>
+            <IonItem>
+              <IonLabel>Horsepower: {itemV2.horsepower}</IonLabel>
+            </IonItem>
+
+            <IonItem>
+              <IonLabel>Automatic: </IonLabel>
+              <IonCheckbox checked={itemV2.automatic} disabled />
+            </IonItem>
+            <IonDatetime value={itemV2.releaseDate} disabled></IonDatetime>
+            <IonButton onClick={handleConflict1}>First Version</IonButton>
+            <IonButton onClick={handleConflict2}>Second Version</IonButton>
+          </>
+        )}
         <IonLoading isOpen={saving} />
         {savingError && (
           <div>{savingError.message || "Failed to save item"}</div>

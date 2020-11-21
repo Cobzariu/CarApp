@@ -14,15 +14,18 @@ import {
 } from "./carApi";
 import { AuthContext } from "../auth";
 import { useNetwork } from "../utils/useNetwork";
+import { type } from "os";
 
 const log = getLogger("ItemProvider");
 const { Storage } = Plugins;
 type SaveItemFn = (item: CarProps, connected: boolean) => Promise<any>;
 type DeleteItemFn = (item: CarProps, connected: boolean) => Promise<any>;
 type UpdateServerFn = () => Promise<any>;
+type ServerItem = (id: string) => Promise<any>;
 
 export interface CarsState {
   items?: CarProps[];
+  oldItem?: CarProps;
   fetching: boolean;
   fetchingError?: Error | null;
   saving: boolean;
@@ -32,6 +35,7 @@ export interface CarsState {
   saveItem?: SaveItemFn;
   deleteItem?: DeleteItemFn;
   updateServer?: UpdateServerFn;
+  getServerItem?: ServerItem;
 }
 
 interface ActionProps {
@@ -43,6 +47,7 @@ const initialState: CarsState = {
   fetching: false,
   saving: false,
   deleting: false,
+  oldItem: undefined,
 };
 
 const FETCH_ITEMS_STARTED = "FETCH_ITEMS_STARTED";
@@ -55,6 +60,8 @@ const SAVE_ITEM_FAILED = "SAVE_ITEM_FAILED";
 const DELETE_ITEM_STARTED = "DELETE_ITEM_STARTED";
 const DELETE_ITEM_SUCCEEDED = "DELETE_ITEM_SUCCEEDED";
 const DELETE_ITEM_FAILED = "DELETE_ITEM_FAILED";
+const CONFLICT = "CONFLICT";
+const CONFLICT_SOLVED = "CONFLICT_SOLVED";
 
 const reducer: (state: CarsState, action: ActionProps) => CarsState = (
   state,
@@ -74,6 +81,7 @@ const reducer: (state: CarsState, action: ActionProps) => CarsState = (
       const items = [...(state.items || [])];
       const item = payload.item;
       if (item._id !== undefined) {
+        log("ITEM in Car Provider: " + JSON.stringify(item));
         const index = items.findIndex((it) => it._id === item._id);
         if (index === -1) {
           items.splice(0, 0, item);
@@ -82,6 +90,7 @@ const reducer: (state: CarsState, action: ActionProps) => CarsState = (
         }
         return { ...state, items, saving: false };
       }
+      return { ...state, items };
     case SAVE_ITEM_SUCCEEDED_OFFLINE: {
       const items = [...(state.items || [])];
       const item = payload.item;
@@ -109,6 +118,14 @@ const reducer: (state: CarsState, action: ActionProps) => CarsState = (
 
     case DELETE_ITEM_FAILED:
       return { ...state, deletingError: payload.error, deleting: false };
+    case CONFLICT: {
+      log("CONFLICT: " + JSON.stringify(payload.item));
+      return { ...state, oldItem: payload.item };
+    }
+    case CONFLICT_SOLVED: {
+      log("CONFLICT_SOLVED");
+      return { ...state, oldItem: undefined };
+    }
     default:
       return state;
   }
@@ -130,6 +147,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     saving,
     savingError,
     deleting,
+    oldItem,
   } = state;
   useEffect(getItemsEffect, [token]);
   useEffect(wsEffect, [token]);
@@ -138,6 +156,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
   const updateServer = useCallback<UpdateServerFn>(updateServerCallback, [
     token,
   ]);
+  const getServerItem = useCallback<ServerItem>(itemServer, [token]);
   const value = {
     items,
     fetching,
@@ -148,8 +167,15 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     deleting,
     deleteItem,
     updateServer,
+    getServerItem,
+    oldItem,
   };
   return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
+
+  async function itemServer(id: string) {
+    const oldItem = await getItem(token, id);
+    dispatch({ type: CONFLICT, payload: { item: oldItem } });
+  }
 
   async function updateServerCallback() {
     const allKeys = Storage.keys();
@@ -261,10 +287,15 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
       if (!connected) {
         throw new Error();
       }
-      if ("_id" in item)
-      {
-        const oldItem=await getItem(token,item._id!);
-        log("oldItem: "+JSON.stringify(oldItem));
+
+      if ("_id" in item) {
+        const oldItem = await getItem(token, item._id!);
+        log("from server: " + JSON.stringify(oldItem));
+        log("new: " + JSON.stringify(item));
+        if (oldItem.version !== item.version - 1) {
+          dispatch({ type: CONFLICT, payload: { item: oldItem } });
+          return;
+        }
       }
       log("saveItem started");
       dispatch({ type: SAVE_ITEM_STARTED });
@@ -274,6 +305,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
 
       log("saveItem succeeded");
       dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: savedItem } });
+      dispatch({ type: CONFLICT_SOLVED });
     } catch (error) {
       log("saveItem failed with errror:", error);
 
@@ -330,9 +362,9 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
           return;
         }
         const { type, payload: item } = message;
-        log(`ws message, item ${type}`);
+        log(`ws message, item ${type} ${item._id}`);
         if (type === "created" || type === "updated") {
-          dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item } });
+          //dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item } });
         }
       });
     }

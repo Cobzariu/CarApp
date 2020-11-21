@@ -5,4 +5,5 @@ export interface CarProps {
   automatic: boolean;
   releaseDate: string;
   status: number;
+  version: number;
 }
