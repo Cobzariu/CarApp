@@ -19,14 +19,12 @@ import {
   IonSearchbar,
 } from "@ionic/react";
 import { add } from "ionicons/icons";
-import { Network, NetworkStatus } from "@capacitor/core";
 import Item from "./Car";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
-import { useBackgroundTask } from "../utils/useBackgroundTask";
 
 const log = getLogger("ItemList");
 
@@ -44,39 +42,15 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const selectOptions = ["automatic", "manual"];
   const [itemsShow, setItemsShow] = useState<CarProps[]>([]);
   const { logout } = useContext(AuthContext);
-  console.log(items);
   const handleLogout = () => {
     logout?.();
     return <Redirect to={{ pathname: "/login" }} />;
   };
-
-  useBackgroundTask(
-    () =>
-      new Promise((resolve) => {
-        console.log("My Background Task");
-        continuouslyCheckNetwork();
-      })
-  );
-
-  async function continuouslyCheckNetwork() {
-    const handler = Network.addListener(
-      "networkStatusChange",
-      handleNetworkStatusChange
-    );
-    Network.getStatus().then(handleNetworkStatusChange);
-    let canceled = false;
-    return () => {
-      canceled = true;
-      handler.remove();
-    };
-
-    function handleNetworkStatusChange(status: NetworkStatus) {
-      log("useNetwork:", status.connected.valueOf());
-      if (!canceled && status.connected === true) {
-        updateServer && updateServer();
-      }
+  useEffect(() => {
+    if (networkStatus.connected === true) {
+      updateServer && updateServer();
     }
-  }
+  }, [networkStatus.connected]);
   useEffect(() => {
     if (items?.length) {
       setItemsShow(items.slice(0, 16));
@@ -98,13 +72,13 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       const boolType = filter === "automatic";
       setItemsShow(items.filter((car) => car.automatic === boolType));
     }
-  }, [filter,items]);
+  }, [filter, items]);
 
   useEffect(() => {
     if (search && items) {
       setItemsShow(items.filter((car) => car.name.startsWith(search)));
     }
-  }, [search,items]);
+  }, [search, items]);
   return (
     <IonPage>
       <IonHeader>
