@@ -33,6 +33,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
     savingError,
     saveItem,
     deleteItem,
+    getServerItem,
     oldItem,
   } = useContext(CarContext);
   const [name, setName] = useState("");
@@ -46,19 +47,18 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
     const routeId = match.params.id || "";
     const item = items?.find((it) => it._id === routeId);
     setItem(item);
-    //console.log("DATE: "+releaseDate.toISOString());
     if (item) {
       setName(item.name);
       setHorsepower(item.horsepower);
       setAutomatic(item.automatic);
       setReleaseDate(item.releaseDate);
+      getServerItem && getServerItem(match.params.id!, item?.version);
     }
-  }, [match.params.id, items]);
+  }, [match.params.id, items, getServerItem]);
   useEffect(() => {
     setItemV2(oldItem);
     log("SET OLD ITEM: " + JSON.stringify(oldItem));
   }, [oldItem]);
-  useEffect(() => {}, []);
   const handleSave = () => {
     const editedItem = item
       ? {
@@ -74,24 +74,25 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
     saveItem &&
       saveItem(editedItem, networkStatus.connected).then(() => {
         log(JSON.stringify(itemV2));
-        if (itemV2===undefined) history.goBack();
+        if (itemV2 === undefined) history.goBack();
       });
   };
   const handleConflict1 = () => {
-    const editedItem = {
-      ...item,
-      name,
-      horsepower,
-      automatic,
-      releaseDate,
-      status: 0,
-      version: oldItem ? oldItem.version + 1 : 0,
-    };
-    saveItem &&
-      saveItem(editedItem, networkStatus.connected).then(() => {
-        log(JSON.stringify(itemV2));
-        history.goBack();
-      });
+    if (oldItem) {
+      const editedItem = {
+        ...item,
+        name,
+        horsepower,
+        automatic,
+        releaseDate,
+        status: 0,
+        version: oldItem?.version + 1,
+      };
+      saveItem &&
+        saveItem(editedItem, networkStatus.connected).then(() => {
+          history.goBack();
+        });
+    }
   };
   const handleConflict2 = () => {
     if (oldItem) {
@@ -107,7 +108,6 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       saveItem &&
         editedItem &&
         saveItem(editedItem, networkStatus.connected).then(() => {
-          log(JSON.stringify(itemV2));
           history.goBack();
         });
     }
@@ -128,26 +128,6 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       deleteItem(editedItem, networkStatus.connected).then(() =>
         history.goBack()
       );
-  };
-  const showDuplicate = () => {
-    return itemV2 ? (
-      <>
-        <IonItem>
-          <IonLabel>Name: {itemV2.name}</IonLabel>
-        </IonItem>
-        <IonItem>
-          <IonLabel>Horsepower: {itemV2.horsepower}</IonLabel>
-        </IonItem>
-
-        <IonItem>
-          <IonLabel>Automatic: </IonLabel>
-          <IonCheckbox checked={itemV2.automatic} disabled />
-        </IonItem>
-        <IonDatetime value={itemV2.releaseDate} disabled></IonDatetime>
-        <IonButton onClick={handleConflict1}>First Version</IonButton>
-        <IonButton onClick={handleConflict2}>Second Version</IonButton>
-      </>
-    ) : null;
   };
   return (
     <IonPage>

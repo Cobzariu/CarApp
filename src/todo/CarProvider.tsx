@@ -13,15 +13,13 @@ import {
   getItem,
 } from "./carApi";
 import { AuthContext } from "../auth";
-import { useNetwork } from "../utils/useNetwork";
-import { type } from "os";
 
 const log = getLogger("ItemProvider");
 const { Storage } = Plugins;
 type SaveItemFn = (item: CarProps, connected: boolean) => Promise<any>;
 type DeleteItemFn = (item: CarProps, connected: boolean) => Promise<any>;
 type UpdateServerFn = () => Promise<any>;
-type ServerItem = (id: string) => Promise<any>;
+type ServerItem = (id: string, version: number) => Promise<any>;
 
 export interface CarsState {
   items?: CarProps[];
@@ -172,9 +170,10 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
   };
   return <CarContext.Provider value={value}>{children}</CarContext.Provider>;
 
-  async function itemServer(id: string) {
+  async function itemServer(id: string, version: number) {
     const oldItem = await getItem(token, id);
-    dispatch({ type: CONFLICT, payload: { item: oldItem } });
+    if (oldItem.version !== version)
+      dispatch({ type: CONFLICT, payload: { item: oldItem } });
   }
 
   async function updateServerCallback() {
@@ -194,7 +193,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
 
     for (i = 0; i < promisedItems.length; i++) {
       const promise = promisedItems[i];
-      const plant = await promise.then(function (it) {
+      const car = await promise.then(function (it) {
         var object; // TODO: extracted var from try scope
         try {
           object = JSON.parse(it.value!);
@@ -203,12 +202,12 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
         }
         return object;
       });
-      if (plant !== null) {
-        if (plant.status === 1) {
-          saveItem(plant, true);
-        } else if (plant.status === 2) {
-          deleteItem(plant, true);
-          await Storage.remove({ key: plant._id });
+      if (car !== null) {
+        if (car.status === 1) {
+          saveItem(car, true);
+        } else if (car.status === 2) {
+          deleteItem(car, true);
+          await Storage.remove({ key: car._id });
         }
       }
     }
@@ -263,7 +262,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
             }
             console.log(typeof object);
             console.log(object);
-            if (object.status != 2) {
+            if (object.status !== 2) {
               return object;
             }
             return null;
@@ -286,16 +285,6 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     try {
       if (!connected) {
         throw new Error();
-      }
-
-      if ("_id" in item) {
-        const oldItem = await getItem(token, item._id!);
-        log("from server: " + JSON.stringify(oldItem));
-        log("new: " + JSON.stringify(item));
-        if (oldItem.version !== item.version - 1) {
-          dispatch({ type: CONFLICT, payload: { item: oldItem } });
-          return;
-        }
       }
       log("saveItem started");
       dispatch({ type: SAVE_ITEM_STARTED });

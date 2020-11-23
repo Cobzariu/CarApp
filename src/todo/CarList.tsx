@@ -98,13 +98,13 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       const boolType = filter === "automatic";
       setItemsShow(items.filter((car) => car.automatic === boolType));
     }
-  }, [filter]);
+  }, [filter,items]);
 
   useEffect(() => {
     if (search && items) {
       setItemsShow(items.filter((car) => car.name.startsWith(search)));
     }
-  }, [search]);
+  }, [search,items]);
   return (
     <IonPage>
       <IonHeader>
