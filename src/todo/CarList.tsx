@@ -17,14 +17,16 @@ import {
   IonSelect,
   IonSelectOption,
   IonSearchbar,
+  IonActionSheet,
 } from "@ionic/react";
-import { add } from "ionicons/icons";
+import { add,camera,close,trash } from "ionicons/icons";
 import Item from "./Car";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
+import {Photo,usePhotoGallery} from "../utils/usePhotoGallery";
 
 const log = getLogger("ItemList");
 
@@ -35,6 +37,8 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const [disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(
     false
   );
+  const { photos, takePhoto, deletePhoto } = usePhotoGallery();
+  const [photoToDelete, setPhotoToDelete] = useState<Photo>();
   const { networkStatus } = useNetwork();
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState<string>("");
@@ -137,6 +141,33 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
+        <IonFab vertical="bottom" horizontal="center" slot="fixed">
+          <IonFabButton onClick={() => takePhoto()}>
+            <IonIcon icon={camera} />
+          </IonFabButton>
+        </IonFab>
+        <IonActionSheet
+          isOpen={!!photoToDelete}
+          buttons={[
+            {
+              text: "Delete",
+              role: "destructive",
+              icon: trash,
+              handler: () => {
+                if (photoToDelete) {
+                  deletePhoto(photoToDelete);
+                  setPhotoToDelete(undefined);
+                }
+              },
+            },
+            {
+              text: "Cancel",
+              icon: close,
+              role: "cancel",
+            },
+          ]}
+          onDidDismiss={() => setPhotoToDelete(undefined)}
+        />
       </IonContent>
     </IonPage>
   );
