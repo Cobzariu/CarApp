@@ -24,6 +24,7 @@ import '@ionic/react/css/display.css';
 import './theme/variables.css';
 import { CarProvider } from './todo/CarProvider';
 import { AuthProvider, Login, PrivateRoute } from './auth';
+import MapPage from './map/MapPage';
 
 const App: React.FC = () => (
   <IonApp>
@@ -34,7 +35,7 @@ const App: React.FC = () => (
           <CarProvider>
             <PrivateRoute path="/items" component={CarList} exact={true}/>
             <PrivateRoute path="/item" component={CarEdit} exact={true}/>
-            <PrivateRoute path="/item/:id" component={CarEdit} exact={true}/>
+            <PrivateRoute path="/items/map" component={MapPage} exact={true}/>
           </CarProvider>
           <Route exact path="/" render={() => <Redirect to="/items"/>}/>
         </AuthProvider>
