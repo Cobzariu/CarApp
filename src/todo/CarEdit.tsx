@@ -13,12 +13,19 @@ import {
   IonLabel,
   IonItem,
   IonDatetime,
+  IonFab,
+  IonFabButton,
+  IonIcon,
+  IonActionSheet,
 } from "@ionic/react";
+import { camera, trash, close } from "ionicons/icons";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { RouteComponentProps } from "react-router";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
+import { Photo, usePhotoGallery } from "../utils/usePhotoGallery";
+import { PhotoViewer } from "@ionic-native/photo-viewer";
 // const log = getLogger("ItemEdit");
 
 interface CarEditProps
@@ -40,9 +47,13 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   const [horsepower, setHorsepower] = useState(0);
   const [automatic, setAutomatic] = useState(false);
   const [releaseDate, setReleaseDate] = useState("");
+  const [photoPath, setPhotoPath] = useState("");
   const [item, setItem] = useState<CarProps>();
   const [itemV2, setItemV2] = useState<CarProps>();
   const { networkStatus } = useNetwork();
+
+  const { photos, takePhoto, deletePhoto } = usePhotoGallery();
+  const [photoToDelete, setPhotoToDelete] = useState<Photo>();
   useEffect(() => {
     const routeId = match.params.id || "";
     const item = items?.find((it) => it._id === routeId);
@@ -52,6 +63,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       setHorsepower(item.horsepower);
       setAutomatic(item.automatic);
       setReleaseDate(item.releaseDate);
+      setPhotoPath(item.photoPath);
       getServerItem && getServerItem(match.params.id!, item?.version);
     }
   }, [match.params.id, items, getServerItem]);
@@ -70,8 +82,17 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           releaseDate,
           status: 0,
           version: item.version ? item.version + 1 : 1,
+          photoPath,
         }
-      : { name, horsepower, automatic, releaseDate, status: 0, version: 1 };
+      : {
+          name,
+          horsepower,
+          automatic,
+          releaseDate,
+          status: 0,
+          version: 1,
+          photoPath,
+        };
     saveItem &&
       saveItem(editedItem, networkStatus.connected).then(() => {
         // log(JSON.stringify(itemV2));
@@ -88,6 +109,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         releaseDate,
         status: 0,
         version: oldItem?.version + 1,
+        photoPath,
       };
       saveItem &&
         saveItem(editedItem, networkStatus.connected).then(() => {
@@ -105,6 +127,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         releaseDate: oldItem?.releaseDate,
         status: oldItem?.status,
         version: oldItem?.version + 1,
+        photoPath,
       };
       saveItem &&
         editedItem &&
@@ -123,8 +146,17 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           releaseDate,
           status: 0,
           version: 0,
+          photoPath,
         }
-      : { name, horsepower, automatic, releaseDate, status: 0, version: 0 };
+      : {
+          name,
+          horsepower,
+          automatic,
+          releaseDate,
+          status: 0,
+          version: 0,
+          photoPath,
+        };
     deleteItem &&
       deleteItem(editedItem, networkStatus.connected).then(() =>
         history.goBack()
@@ -168,6 +200,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           value={releaseDate}
           onIonChange={(e) => setReleaseDate(e.detail.value?.split("T")[0]!)}
         ></IonDatetime>
+        <img src={photoPath} />
         {itemV2 && (
           <>
             <IonItem>
@@ -190,6 +223,40 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         {savingError && (
           <div>{savingError.message || "Failed to save item"}</div>
         )}
+        <IonFab vertical="bottom" horizontal="center" slot="fixed">
+          <IonFabButton
+            onClick={() => {
+              const photoTaken = takePhoto();
+              photoTaken.then((data) => {
+                setPhotoPath(data.webviewPath!);
+              });
+            }}
+          >
+            <IonIcon icon={camera} />
+          </IonFabButton>
+        </IonFab>
+        <IonActionSheet
+          isOpen={!!photoToDelete}
+          buttons={[
+            {
+              text: "Delete",
+              role: "destructive",
+              icon: trash,
+              handler: () => {
+                if (photoToDelete) {
+                  deletePhoto(photoToDelete);
+                  setPhotoToDelete(undefined);
+                }
+              },
+            },
+            {
+              text: "Cancel",
+              icon: close,
+              role: "cancel",
+            },
+          ]}
+          onDidDismiss={() => setPhotoToDelete(undefined)}
+        />
       </IonContent>
     </IonPage>
   );

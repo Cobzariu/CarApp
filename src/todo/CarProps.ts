@@ -6,4 +6,5 @@ export interface CarProps {
   releaseDate: string;
   status: number;
   version: number;
+  photoPath: string;
 }

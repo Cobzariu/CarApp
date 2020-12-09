@@ -17,18 +17,14 @@ import {
   IonSelect,
   IonSelectOption,
   IonSearchbar,
-  IonActionSheet,
 } from "@ionic/react";
-import { add, camera, trash, close } from "ionicons/icons";
-import { Network, NetworkStatus } from "@capacitor/core";
+import { add } from "ionicons/icons";
 import Item from "./Car";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
-import { useBackgroundTask } from "../utils/useBackgroundTask";
-import { Photo, usePhotoGallery } from "../utils/usePhotoGallery";
 
 const log = getLogger("ItemList");
 
@@ -39,8 +35,6 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const [disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(
     false
   );
-  const { photos, takePhoto, deletePhoto } = usePhotoGallery();
-  const [photoToDelete, setPhotoToDelete] = useState<Photo>();
   const { networkStatus } = useNetwork();
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState<string>("");
@@ -48,39 +42,15 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const selectOptions = ["automatic", "manual"];
   const [itemsShow, setItemsShow] = useState<CarProps[]>([]);
   const { logout } = useContext(AuthContext);
-  console.log(items);
   const handleLogout = () => {
     logout?.();
     return <Redirect to={{ pathname: "/login" }} />;
   };
-
-  useBackgroundTask(
-    () =>
-      new Promise((resolve) => {
-        console.log("My Background Task");
-        continuouslyCheckNetwork();
-      })
-  );
-
-  async function continuouslyCheckNetwork() {
-    const handler = Network.addListener(
-      "networkStatusChange",
-      handleNetworkStatusChange
-    );
-    Network.getStatus().then(handleNetworkStatusChange);
-    let canceled = false;
-    return () => {
-      canceled = true;
-      handler.remove();
-    };
-
-    function handleNetworkStatusChange(status: NetworkStatus) {
-      log("useNetwork:", status.connected.valueOf());
-      if (!canceled && status.connected === true) {
-        updateServer && updateServer();
-      }
+  useEffect(() => {
+    if (networkStatus.connected === true) {
+      updateServer && updateServer();
     }
-  }
+  }, [networkStatus.connected]);
   useEffect(() => {
     if (items?.length) {
       setItemsShow(items.slice(0, 16));
@@ -148,6 +118,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
                 releaseDate={car.releaseDate}
                 status={car.status}
                 version={car.version}
+                photoPath={car.photoPath}
                 onEdit={(id) => history.push(`/item/${id}`)}
               />
             );
@@ -167,33 +138,6 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
-        <IonFab vertical="bottom" horizontal="center" slot="fixed">
-          <IonFabButton onClick={() => takePhoto()}>
-            <IonIcon icon={camera} />
-          </IonFabButton>
-        </IonFab>
-        <IonActionSheet
-          isOpen={!!photoToDelete}
-          buttons={[
-            {
-              text: "Delete",
-              role: "destructive",
-              icon: trash,
-              handler: () => {
-                if (photoToDelete) {
-                  deletePhoto(photoToDelete);
-                  setPhotoToDelete(undefined);
-                }
-              },
-            },
-            {
-              text: "Cancel",
-              icon: close,
-              role: "cancel",
-            },
-          ]}
-          onDidDismiss={() => setPhotoToDelete(undefined)}
-        />
       </IonContent>
     </IonPage>
   );
