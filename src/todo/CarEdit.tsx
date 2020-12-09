@@ -19,7 +19,7 @@ import { CarContext } from "./CarProvider";
 import { RouteComponentProps } from "react-router";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
-const log = getLogger("ItemEdit");
+// const log = getLogger("ItemEdit");
 
 interface CarEditProps
   extends RouteComponentProps<{
@@ -57,8 +57,9 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   }, [match.params.id, items, getServerItem]);
   useEffect(() => {
     setItemV2(oldItem);
-    log("SET OLD ITEM: " + JSON.stringify(oldItem));
+    // log("SET OLD ITEM: " + JSON.stringify(oldItem));
   }, [oldItem]);
+  // log("intra");
   const handleSave = () => {
     const editedItem = item
       ? {
@@ -73,7 +74,7 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       : { name, horsepower, automatic, releaseDate, status: 0, version: 1 };
     saveItem &&
       saveItem(editedItem, networkStatus.connected).then(() => {
-        log(JSON.stringify(itemV2));
+        // log(JSON.stringify(itemV2));
         if (itemV2 === undefined) history.goBack();
       });
   };
