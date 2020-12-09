@@ -112,7 +112,6 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
         </IonSelect>
         {itemsShow &&
           itemsShow.map((car: CarProps) => {
-           
             return (
               <Item
                 key={car._id}
