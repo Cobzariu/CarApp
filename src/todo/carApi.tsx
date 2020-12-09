@@ -26,7 +26,7 @@ export const getItem: (token: string, id:string) => Promise<CarProps> = (token,i
 export const createItem: (
   token: string,
   item: CarProps
-) => Promise<CarProps> = (token, item) => {
+) => Promise<CarProps[]> = (token, item) => {
   var result = axios.post(itemUrl, item, authConfig(token));
   result.then(async function (r) {
     var item = r.data;
@@ -40,7 +40,7 @@ export const createItem: (
 export const updateItem: (
   token: string,
   item: CarProps
-) => Promise<CarProps> = (token, item) => {
+) => Promise<CarProps[]> = (token, item) => {
   console.log("TOKEN: "+token);
   var result = axios.put(`${itemUrl}/${item._id}`, item, authConfig(token));
   result
