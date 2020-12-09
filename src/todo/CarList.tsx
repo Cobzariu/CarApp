@@ -19,7 +19,7 @@ import {
   IonSearchbar,
   IonActionSheet,
 } from "@ionic/react";
-import { add } from "ionicons/icons";
+import { add, camera, trash, close } from "ionicons/icons";
 import { Network, NetworkStatus } from "@capacitor/core";
 import Item from "./Car";
 import { getLogger } from "../core";
@@ -28,6 +28,7 @@ import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
 import { useBackgroundTask } from "../utils/useBackgroundTask";
+import { Photo, usePhotoGallery } from "../utils/usePhotoGallery";
 
 const log = getLogger("ItemList");
 
@@ -38,8 +39,8 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const [disableInfiniteScroll, setDisableInfiniteScroll] = useState<boolean>(
     false
   );
-  // const { photos, takePhoto, deletePhoto } = usePhotoGallery();
-  // const [photoToDelete, setPhotoToDelete] = useState<Photo>();
+  const { photos, takePhoto, deletePhoto } = usePhotoGallery();
+  const [photoToDelete, setPhotoToDelete] = useState<Photo>();
   const { networkStatus } = useNetwork();
   const [filter, setFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState<string>("");
@@ -101,13 +102,13 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       const boolType = filter === "automatic";
       setItemsShow(items.filter((car) => car.automatic === boolType));
     }
-  }, [filter,items]);
+  }, [filter, items]);
 
   useEffect(() => {
     if (search && items) {
       setItemsShow(items.filter((car) => car.name.startsWith(search)));
     }
-  }, [search,items]);
+  }, [search, items]);
   return (
     <IonPage>
       <IonHeader>
@@ -166,15 +167,6 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
             <IonIcon icon={add} />
           </IonFabButton>
         </IonFab>
-        {/* <IonFab vertical="bottom" horizontal="start" slot="fixed">
-          <IonFabButton
-            onClick={() => {
-              history.push("/items/map");
-            }}
-          >
-            <IonIcon icon={map} />
-          </IonFabButton>
-        </IonFab>
         <IonFab vertical="bottom" horizontal="center" slot="fixed">
           <IonFabButton onClick={() => takePhoto()}>
             <IonIcon icon={camera} />
@@ -201,7 +193,7 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
             },
           ]}
           onDidDismiss={() => setPhotoToDelete(undefined)}
-        /> */}
+        />
       </IonContent>
     </IonPage>
   );
