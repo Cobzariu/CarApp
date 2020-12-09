@@ -202,31 +202,11 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
         }
         return object;
       });
-      log("CAR: " + JSON.stringify(car));
       if (car !== null) {
         if (car.status === 1) {
-          dispatch({ type: DELETE_ITEM_SUCCEEDED, payload: { item: car } });
-          await Storage.remove({ key: car._id });
-          const oldCar = car;
-          delete oldCar._id;
-          oldCar.status = 0;
-          const newCar = await createItem(token, oldCar);
-          dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: newCar } });
-          await Storage.set({
-            key: JSON.stringify(newCar._id),
-            value: JSON.stringify(newCar),
-          });
+          saveItem(car, true);
         } else if (car.status === 2) {
-          car.status = 0;
-          const newCar = await updateItem(token, car);
-          dispatch({ type: SAVE_ITEM_SUCCEEDED, payload: { item: newCar } });
-          await Storage.set({
-            key: JSON.stringify(newCar._id),
-            value: JSON.stringify(newCar),
-          });
-        } else if (car.status === 3) {
-          car.status = 0;
-          await eraseItem(token, car);
+          deleteItem(car, true);
           await Storage.remove({ key: car._id });
         }
       }
@@ -270,7 +250,7 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
           return promises;
         });
 
-        const cars = [];
+        const plantItems = [];
         for (i = 0; i < promisedItems.length; i++) {
           const promise = promisedItems[i];
           const plant = await promise.then(function (it) {
@@ -288,17 +268,17 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
             return null;
           });
           if (plant != null) {
-            cars.push(plant);
+            plantItems.push(plant);
           }
         }
 
-        const items = cars;
+        const items = plantItems;
         dispatch({ type: FETCH_ITEMS_SUCCEEDED, payload: { items: items } });
       }
     }
   }
   function random_id() {
-    return "_" + Math.random().toString(36).substr(2, 9);
+    return Date.now().toString();
   }
 
   async function saveItemCallback(item: CarProps, connected: boolean) {
@@ -318,18 +298,16 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
     } catch (error) {
       log("saveItem failed with errror:", error);
 
-      if (item._id === undefined) {
-        item._id = random_id();
-        item.status = 1;
-        alert("Car saved locally");
-      } else {
-        item.status = 2;
-        alert("Car updated locally");
-      }
+      // TODO: the apps stores data locally
+      item.status = 1; // todo: set the data status as MODIFIED OFFLINE
+      if (item._id === undefined) item._id = random_id();
       await Storage.set({
-        key: item._id,
+        key: JSON.stringify(item._id),
         value: JSON.stringify(item),
       });
+
+      // TODO: Inform user about the items not sent to the server
+      alert("ITEM WAS SAVED LOCALLY!");
 
       dispatch({ type: SAVE_ITEM_SUCCEEDED_OFFLINE, payload: { item: item } });
     }
@@ -340,19 +318,25 @@ export const CarProvider: React.FC<CarProviderProps> = ({ children }) => {
       if (!connected) {
         throw new Error();
       }
+      log("delete started");
       dispatch({ type: DELETE_ITEM_STARTED });
       const deletedItem = await eraseItem(token, item);
+      log("delete succeeded");
       console.log(deletedItem);
-      await Storage.remove({ key: item._id! });
       dispatch({ type: DELETE_ITEM_SUCCEEDED, payload: { item: item } });
     } catch (error) {
+      log("delete failed");
 
-      item.status = 3; 
+      // TODO: the apps stores data locally
+      item.status = 2; // todo: set the data status as DELETED OFFLINE
       await Storage.set({
         key: JSON.stringify(item._id),
         value: JSON.stringify(item),
       });
-      alert("Car deleted locally");
+
+      // TODO: Inform user about the items not sent to the server
+      alert("ITEM WAS DELETED LOCALLY!");
+
       dispatch({ type: DELETE_ITEM_SUCCEEDED, payload: { item: item } });
     }
   }

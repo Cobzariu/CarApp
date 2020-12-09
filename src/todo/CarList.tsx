@@ -19,13 +19,15 @@ import {
   IonSearchbar,
   IonActionSheet,
 } from "@ionic/react";
-import { add, camera, close, trash, map } from "ionicons/icons";
+import { add, camera, trash, close } from "ionicons/icons";
+import { Network, NetworkStatus } from "@capacitor/core";
 import Item from "./Car";
 import { getLogger } from "../core";
 import { CarContext } from "./CarProvider";
 import { AuthContext } from "../auth";
 import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
+import { useBackgroundTask } from "../utils/useBackgroundTask";
 import { Photo, usePhotoGallery } from "../utils/usePhotoGallery";
 
 const log = getLogger("ItemList");
@@ -46,15 +48,39 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
   const selectOptions = ["automatic", "manual"];
   const [itemsShow, setItemsShow] = useState<CarProps[]>([]);
   const { logout } = useContext(AuthContext);
+  console.log(items);
   const handleLogout = () => {
     logout?.();
     return <Redirect to={{ pathname: "/login" }} />;
   };
-  useEffect(() => {
-    if (networkStatus.connected === true) {
-      updateServer && updateServer();
+
+  useBackgroundTask(
+    () =>
+      new Promise((resolve) => {
+        console.log("My Background Task");
+        continuouslyCheckNetwork();
+      })
+  );
+
+  async function continuouslyCheckNetwork() {
+    const handler = Network.addListener(
+      "networkStatusChange",
+      handleNetworkStatusChange
+    );
+    Network.getStatus().then(handleNetworkStatusChange);
+    let canceled = false;
+    return () => {
+      canceled = true;
+      handler.remove();
+    };
+
+    function handleNetworkStatusChange(status: NetworkStatus) {
+      log("useNetwork:", status.connected.valueOf());
+      if (!canceled && status.connected === true) {
+        updateServer && updateServer();
+      }
     }
-  }, [networkStatus.connected]);
+  }
   useEffect(() => {
     if (items?.length) {
       setItemsShow(items.slice(0, 16));
@@ -139,15 +165,6 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
         <IonFab vertical="bottom" horizontal="end" slot="fixed">
           <IonFabButton onClick={() => history.push("/item")}>
             <IonIcon icon={add} />
-          </IonFabButton>
-        </IonFab>
-        <IonFab vertical="bottom" horizontal="start" slot="fixed">
-          <IonFabButton
-            onClick={() => {
-              history.push("/items/map");
-            }}
-          >
-            <IonIcon icon={map} />
           </IonFabButton>
         </IonFab>
         <IonFab vertical="bottom" horizontal="center" slot="fixed">
