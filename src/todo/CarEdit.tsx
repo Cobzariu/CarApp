@@ -26,6 +26,7 @@ import { CarProps } from "./CarProps";
 import { useNetwork } from "../utils/useNetwork";
 import { Photo, usePhotoGallery } from "../utils/usePhotoGallery";
 import { PhotoViewer } from "@ionic-native/photo-viewer";
+import { MyMap } from "../utils/MyMap";
 // const log = getLogger("ItemEdit");
 
 interface CarEditProps
@@ -48,6 +49,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
   const [automatic, setAutomatic] = useState(false);
   const [releaseDate, setReleaseDate] = useState("");
   const [photoPath, setPhotoPath] = useState("");
+  const [latitude, setLatitude] = useState(46.7533824);
+  const [longitude, setLongitude] = useState(23.5831296);
   const [item, setItem] = useState<CarProps>();
   const [itemV2, setItemV2] = useState<CarProps>();
   const { networkStatus } = useNetwork();
@@ -64,6 +67,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
       setAutomatic(item.automatic);
       setReleaseDate(item.releaseDate);
       setPhotoPath(item.photoPath);
+      if (item.latitude) setLatitude(item.latitude);
+      if (item.longitude) setLongitude(item.longitude);
       getServerItem && getServerItem(match.params.id!, item?.version);
     }
   }, [match.params.id, items, getServerItem]);
@@ -83,6 +88,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           status: 0,
           version: item.version ? item.version + 1 : 1,
           photoPath,
+          latitude,
+          longitude
         }
       : {
           name,
@@ -92,6 +99,9 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           status: 0,
           version: 1,
           photoPath,
+          latitude,
+          longitude
+          
         };
     saveItem &&
       saveItem(editedItem, networkStatus.connected).then(() => {
@@ -110,6 +120,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         status: 0,
         version: oldItem?.version + 1,
         photoPath,
+        latitude,
+        longitude
       };
       saveItem &&
         saveItem(editedItem, networkStatus.connected).then(() => {
@@ -128,6 +140,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         status: oldItem?.status,
         version: oldItem?.version + 1,
         photoPath,
+        latitude,
+        longitude
       };
       saveItem &&
         editedItem &&
@@ -147,6 +161,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           status: 0,
           version: 0,
           photoPath,
+          latitude,
+          longitude
         }
       : {
           name,
@@ -156,6 +172,8 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           status: 0,
           version: 0,
           photoPath,
+          latitude,
+          longitude
         };
     deleteItem &&
       deleteItem(editedItem, networkStatus.connected).then(() =>
@@ -201,6 +219,14 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
           onIonChange={(e) => setReleaseDate(e.detail.value?.split("T")[0]!)}
         ></IonDatetime>
         <img src={photoPath} />
+        <MyMap
+            lat={latitude}
+            lng={longitude}
+            onMapClick={(location: any) => {
+              setLatitude(location.latLng.lat());
+              setLongitude(location.latLng.lng());
+            }}
+          />
         {itemV2 && (
           <>
             <IonItem>

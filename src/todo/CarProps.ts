@@ -7,4 +7,6 @@ export interface CarProps {
   status: number;
   version: number;
   photoPath: string;
+  latitude:number;
+  longitude:number;
 }

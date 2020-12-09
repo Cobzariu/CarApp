@@ -119,6 +119,8 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
                 status={car.status}
                 version={car.version}
                 photoPath={car.photoPath}
+                latitude={car.latitude}
+                longitude={car.longitude}
                 onEdit={(id) => history.push(`/item/${id}`)}
               />
             );
