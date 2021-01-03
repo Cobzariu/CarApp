@@ -19,7 +19,7 @@ import {
   IonActionSheet,
 } from "@ionic/react";
 import { camera, trash, close } from "ionicons/icons";
-import { getLogger } from "../core";
+import { createAnimation } from "@ionic/react";
 import { CarContext } from "./CarProvider";
 import { RouteComponentProps } from "react-router";
 import { CarProps } from "./CarProps";
@@ -180,27 +180,55 @@ const CarEdit: React.FC<CarEditProps> = ({ history, match }) => {
         history.goBack()
       );
   };
+  function chainAnimations() {
+    const elB = document.querySelector('.carName');
+    const elC = document.querySelector('.carHorsepower');
+    if (elB && elC) {
+      const animationA = createAnimation()
+        .addElement(elB)
+        .duration(5000)
+        .fromTo('transform', 'rotate(0)', 'rotate(45deg)');
+        
+      const animationB = createAnimation()
+        .addElement(elC)
+        .duration(7000)
+        .fromTo('transform', 'scale(1)', 'scale(0.8)');
+        (async () => {
+        await animationA.play();
+        await animationB.play();
+      })();
+    }
+  }
+  useEffect(chainAnimations, []);
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
+          {/* <div className="edit"> */}
           <IonTitle>Edit</IonTitle>
+          {/* </div> */}
+          {/* <div className="buttons"> */}
           <IonButtons slot="end">
             <IonButton onClick={handleSave}>Save</IonButton>
             <IonButton onClick={handleDelete}>Delete</IonButton>
           </IonButtons>
+          {/* </div> */}
         </IonToolbar>
       </IonHeader>
       <IonContent>
         <IonItem>
+          <div className="carName">
           <IonLabel>Name: </IonLabel>
+          </div>
           <IonInput
             value={name}
             onIonChange={(e) => setName(e.detail.value || "")}
           />
         </IonItem>
         <IonItem>
-          <IonLabel>Horsepower</IonLabel>
+          <div className="carHorsepower">
+          <IonLabel>Horsepower:</IonLabel>
+          </div>
           <IonInput
             value={horsepower}
             onIonChange={(e) => setHorsepower(Number(e.detail.value))}

@@ -1,4 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
+import { createAnimation } from "@ionic/react";
 import { RouteComponentProps } from "react-router";
 import { Redirect } from "react-router-dom";
 import {
@@ -79,22 +80,65 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
       setItemsShow(items.filter((car) => car.name.startsWith(search)));
     }
   }, [search, items]);
+
+  function simpleAnimation() {
+    const el = document.querySelector(".networkStatus");
+    if (el) {
+      const animation = createAnimation()
+        .addElement(el)
+        .duration(1000)
+        .direction("alternate")
+        .iterations(Infinity)
+        .keyframes([
+          { offset: 0, transform: "scale(1)", opacity: "1" },
+          {
+            offset: 1,
+            transform: "scale(0.5)",
+            opacity: "0.5",
+          },
+        ]);
+      animation.play();
+    }
+  }
+  useEffect(simpleAnimation, []);
+  function groupAnimations() {
+    const elB = document.querySelector('.searchBar');
+    const elC = document.querySelector('.select');
+    if (elB && elC) {
+      const animationA = createAnimation()
+        .addElement(elB)
+        .fromTo('transform', 'scale(1)','scale(0.75)');
+      const animationB = createAnimation()
+        .addElement(elC)
+        .fromTo('transform', 'rotate(0)', 'rotate(180deg)');
+      const parentAnimation = createAnimation()
+        .duration(10000)
+        .addAnimation([animationA, animationB]);
+      parentAnimation.play();    }
+  }
+  useEffect(groupAnimations, []);
+
   return (
     <IonPage>
       <IonHeader>
         <IonToolbar>
           <IonTitle>Car List</IonTitle>
           <IonButton onClick={handleLogout}>Logout</IonButton>
-          <div>Network is {networkStatus.connected ? "online" : "offline"}</div>
+          <div className="networkStatus">
+            Network is {networkStatus.connected ? "online" : "offline"}
+          </div>
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
         <IonLoading isOpen={fetching} message="Fetching items" />
+        <div className="searchBar">
         <IonSearchbar
           value={search}
           debounce={1000}
           onIonChange={(e) => setSearch(e.detail.value!)}
         ></IonSearchbar>
+        </div>
+        <div className="select">
         <IonSelect
           value={filter}
           placeholder="Select transmission type"
@@ -106,6 +150,8 @@ const CarList: React.FC<RouteComponentProps> = ({ history }) => {
             </IonSelectOption>
           ))}
         </IonSelect>
+        </div>
+        
         {itemsShow &&
           itemsShow.map((car: CarProps) => {
             return (
